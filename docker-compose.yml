@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+
+  auth_service:
+    build:
+      context: ./auth_service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8001:8000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+    volumes:
+      - ./auth_service:/app
+  
+  event_service:
+    build:
+      context: ./event_service
+      dockerfile: Dockerfile
+    container_name: event-service
+    ports:
+      - "8002:8000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+    volumes:
+      - ./event_service:/app
+
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+  
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - auth_service
+      - event_service
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+volumes:
+  mongo_data:
